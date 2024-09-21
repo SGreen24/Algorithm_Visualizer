@@ -1,88 +1,117 @@
+# Silas Green
+# Project: Algorithm Visualizer
+
+# This project visualizes various sorting algorithms (Bubble Sort, Insertion Sort, Merge Sort, Quick Sort, Heap Sort,
+# and Selection Sort) using the Pygame library. It allows the user to visualize the step-by-step sorting process
+# and interactively switch between algorithms, reset the list, and choose between ascending or descending order.
+
+# Date: 9/21/24
+# Language: Python 3.9+
+# Libraries: Pygame, Random, Math
+
 import pygame
 import random
 import math
 
+# Initialize Pygame
 pygame.init()
 
 
-# Information on the board we'll use on Pygame
+# Class to manage the display board and key elements for sorting visualization
 class board_info:
-    BLACK = 0, 0, 0
-    WHITE = 255, 255, 255
-    GREEN = 0, 255, 0
-    RED = 255, 0, 0
-    BACKGROUND_COLOR = WHITE
+    BLACK = 0, 0, 0  # RGB value for black
+    WHITE = 255, 255, 255  # RGB value for white
+    GREEN = 0, 255, 0  # RGB value for green (used for highlighting during sorting)
+    RED = 255, 0, 0  # RGB value for red (used for highlighting during sorting)
+    BACKGROUND_COLOR = WHITE  # Background color for the visualization
 
-    # Grey gradients for our numbers in graph
+    # Grey gradients to create a visual effect for the sorting elements
     GRADIENTS = [
         (128, 128, 128),
         (160, 160, 160),
         (192, 192, 192)
     ]
 
+    # Fonts for displaying titles and controls
     FONT = pygame.font.SysFont('roboto', 30)
     LARGE_FONT = pygame.font.SysFont('roboto', 40)
 
+    # Padding for better visual representation
     SIDE_PAD = 100
     TOP_PAD = 150
 
+    # Constructor to initialize board dimensions and set up the list
     def __init__(self, width, height, lst):
         self.width = width
         self.height = height
-        self.window = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Sorting Algorithm Visualizer!")
+        self.window = pygame.display.set_mode((self.width, self.height))  # Pygame window
+        pygame.display.set_caption("Sorting Algorithm Visualizer!")  # Window title
         self.set_list(lst)
 
+    # Method to set and update the list being sorted
     def set_list(self, lst):
         self.lst = lst
-        self.min_val = min(lst)
-        self.max_val = max(lst)
+        self.min_val = min(lst)  # Minimum value in the list
+        self.max_val = max(lst)  # Maximum value in the list
 
+        # Calculate width and height of each bar to be displayed in the visualization
         self.board_width = round((self.width - self.SIDE_PAD) / len(lst))
         self.board_height = math.floor((self.height - self.TOP_PAD) / (self.max_val - self.min_val))
-        self.start_x = self.SIDE_PAD // 2
+        self.start_x = self.SIDE_PAD // 2  # Starting x position for the first bar
 
 
+# Draw the main board with algorithm information and controls
 def draw(draw_info, sorting_algorithm_name, ascending):
     draw_info.window.fill(draw_info.BACKGROUND_COLOR)
 
+    # Render the title displaying the sorting algorithm and order
     title = draw_info.LARGE_FONT.render(f"{sorting_algorithm_name} - {'Ascending' if ascending else 'Descending'}", 1,
                                         draw_info.GREEN)
     draw_info.window.blit(title, (draw_info.width / 2 - title.get_width() / 2, 5))
 
+    # Render controls for user input
     controls = draw_info.FONT.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending", 1,
                                      draw_info.BLACK)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 45))
 
+    # Render available sorting algorithms
     sorting = draw_info.FONT.render("I - Insertion | S - Selection | B - Bubble | M - Merge | Q - Quick | H - Heap", 1,
                                     draw_info.BLACK)
     draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 75))
 
+    # Draw the list of bars representing the data
     draw_list(draw_info)
     pygame.display.update()
 
 
+# Draw the list of elements (bars) in the visualizer
 def draw_list(draw_info, color_positions=None, clear_bg=False):
     if color_positions is None:
-        color_positions = {}
+        color_positions = {}  # Default color positions if none are provided
+
     lst = draw_info.lst
 
+    # Clear the background if necessary to avoid drawing over old frames
     if clear_bg:
         clear_rect = (draw_info.SIDE_PAD // 2, draw_info.TOP_PAD, draw_info.width - draw_info.SIDE_PAD,
                       draw_info.height - draw_info.TOP_PAD)
         pygame.draw.rect(draw_info.window, draw_info.BACKGROUND_COLOR, clear_rect)
 
+    # Iterate through each element in the list and draw it as a bar
     for i, val in enumerate(lst):
-        x = draw_info.start_x + i * draw_info.board_width
-        y = draw_info.height - (val - draw_info.min_val) * draw_info.board_height
+        x = draw_info.start_x + i * draw_info.board_width  # X-coordinate of the bar
+        y = draw_info.height - (val - draw_info.min_val) * draw_info.board_height  # Height of the bar
 
+        # Alternate colors for bars using predefined gradients
         color = draw_info.GRADIENTS[i % 3]
 
+        # Change color of specific positions during sorting
         if i in color_positions:
             color = color_positions[i]
 
         pygame.draw.rect(draw_info.window, color, (x, y, draw_info.board_width, draw_info.height))
 
+        # Update display immediately for smoother visualization during sorting
         if clear_bg:
             pygame.display.update()
 
@@ -281,79 +310,97 @@ def selection_sort(draw_info, ascending=True):
 
 # Main Function to Run the Program
 def main():
-    run = True
-    clock = pygame.time.Clock()
+    run = True  # Control flag to keep the program running
+    clock = pygame.time.Clock()  # To control the frame rate of the visualization
 
-    n = 50
-    min_val = 0
-    max_val = 100
+    # Parameters for the list to be sorted
+    n = 50  # Number of elements in the list
+    min_val = 0  # Minimum value in the randomly generated list
+    max_val = 100  # Maximum value in the randomly generated list
 
-    sorting = False
-    ascending = True
+    sorting = False  # Flag to indicate whether a sorting process is active
+    ascending = True  # Flag to indicate sorting order (ascending/descending)
 
+    # Default sorting algorithm set to Bubble Sort
     sorting_algorithm = bubble_sort
     sorting_algorithm_name = "Bubble Sort"
-    sorting_algorithm_generator = None
+    sorting_algorithm_generator = None  # Generator to manage the step-by-step sorting process
 
+    # Generate the initial random list of values
     lst = generate_starting_list(n, min_val, max_val)
-    draw_info = board_info(800, 600, lst)
 
-    pygame.display.update()
+    # Create the board info (window dimensions and data list)
+    draw_info = board_info(800, 600, lst)  # 800x600 window for visualization
 
+    pygame.display.update()  # Refresh the display
+
+    # Main event loop for Pygame
     while run:
-        clock.tick(120)
+        clock.tick(120)  # Cap the frame rate at 120 FPS for smoother visuals
 
         if sorting:
+            # If a sorting algorithm is running, perform the next sorting step
             try:
-                next(sorting_algorithm_generator)
+                next(sorting_algorithm_generator)  # Execute the next step in the generator
             except StopIteration:
-                sorting = False
+                sorting = False  # Sorting is finished
         else:
+            # Draw the board and current status when not sorting
             draw(draw_info, sorting_algorithm_name, ascending)
 
+        # Event handling loop for Pygame
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
+            if event.type == pygame.QUIT:  # Handle window close event
+                run = False  # Exit the main loop, terminating the program
 
-            if event.type != pygame.KEYDOWN:
+            if event.type != pygame.KEYDOWN:  # Continue only for key events
                 continue
 
-            if event.key == pygame.K_r:
+            if event.key == pygame.K_r:  # Reset the list to a new random list
                 lst = generate_starting_list(n, min_val, max_val)
-                draw_info.set_list(lst)
-                sorting = False
+                draw_info.set_list(lst)  # Update the list in the board
+                sorting = False  # Stop any ongoing sorting
 
-            elif event.key == pygame.K_SPACE and not sorting:
-                sorting = True
-                sorting_algorithm_generator = sorting_algorithm(draw_info, ascending)
+            elif event.key == pygame.K_SPACE and not sorting:  # Start sorting
+                sorting = True  # Sorting is now active
+                sorting_algorithm_generator = sorting_algorithm(draw_info, ascending)  # Get the sorting generator
 
+            # Set sorting order to ascend
             elif event.key == pygame.K_a and not sorting:
-                ascending = True
-            elif event.key == pygame.K_d and not sorting:
-                ascending = False
+                ascending = True  # Sorting order: Ascending
 
-            # Sorting algorithm options
-            elif event.key == pygame.K_i and not sorting:
+            # Set sorting order to descend
+            elif event.key == pygame.K_d and not sorting:
+                ascending = False  # Sorting order: Descending
+
+            # Switch between sorting algorithms based on key inputs
+            elif event.key == pygame.K_i and not sorting:  # Insertion Sort
                 sorting_algorithm = insertion_sort
                 sorting_algorithm_name = "Insertion Sort"
-            elif event.key == pygame.K_b and not sorting:
+
+            elif event.key == pygame.K_b and not sorting:  # Bubble Sort
                 sorting_algorithm = bubble_sort
                 sorting_algorithm_name = "Bubble Sort"
-            elif event.key == pygame.K_m and not sorting:
+
+            elif event.key == pygame.K_m and not sorting:  # Merge Sort
                 sorting_algorithm = merge_sort
                 sorting_algorithm_name = "Merge Sort"
-            elif event.key == pygame.K_q and not sorting:
+
+            elif event.key == pygame.K_q and not sorting:  # Quick Sort
                 sorting_algorithm = quick_sort
                 sorting_algorithm_name = "Quick Sort"
-            elif event.key == pygame.K_h and not sorting:
+
+            elif event.key == pygame.K_h and not sorting:  # Heap Sort
                 sorting_algorithm = heap_sort
                 sorting_algorithm_name = "Heap Sort"
-            elif event.key == pygame.K_s and not sorting:
+
+            elif event.key == pygame.K_s and not sorting:  # Selection Sort
                 sorting_algorithm = selection_sort
                 sorting_algorithm_name = "Selection Sort"
 
-    pygame.quit()
+    pygame.quit()  # Cleanly quit Pygame when the program ends
 
 
+# Ensure the main function runs when the script is executed directly
 if __name__ == "__main__":
     main()
